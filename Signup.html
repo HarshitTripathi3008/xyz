@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f2f5;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .error {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            height: 20px;
+        }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #218838;
+        }
+        .btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .login-link a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .loading {
+            text-align: center;
+            color: #007bff;
+            display: none;
+        }
+        .password-strength {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .strength-weak { color: #dc3545; }
+        .strength-medium { color: #ffc107; }
+        .strength-strong { color: #28a745; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Create New Account</h2>
+        <form id="signupForm" autocomplete="off">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    name="name" 
+                    required 
+                    placeholder="Enter your name"
+                    minlength="2"
+                />
+                <div id="nameError" class="error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    required 
+                    placeholder="Enter your email"
+                    pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                />
+                <div id="emailError" class="error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    required 
+                    placeholder="Create a strong password"
+                    minlength="8"
+                />
+                <div id="passwordError" class="error"></div>
+                <div id="passwordStrength" class="password-strength"></div>
+            </div>
+
+            <div class="loading" id="loadingIndicator">
+                Creating your account... Please wait
+            </div>
+
+            <button 
+                type="submit" 
+                class="btn" 
+                id="signupButton"
+            >
+                Sign Up
+            </button>
+
+            <div class="login-link">
+                Already have an account? <a href="login.html">Login</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('signupForm');
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            
+            const nameError = document.getElementById('nameError');
+            const emailError = document.getElementById('emailError');
+            const passwordError = document.getElementById('passwordError');
+            const passwordStrength = document.getElementById('passwordStrength');
+            
+            const signupButton = document.getElementById('signupButton');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            const nameRegex = /^[a-zA-Z\s]{2,50}$/;
+
+            function validateName() {
+                const name = nameInput.value.trim();
+                if (!name) {
+                    nameError.textContent = 'Name is required';
+                    return false;
+                }
+                if (!nameRegex.test(name)) {
+                    nameError.textContent = 'Name must be 2-50 letters and spaces only';
+                    return false;
+                }
+                nameError.textContent = '';
+                return true;
+            }
+
+            function validateEmail() {
+                const email = emailInput.value.trim();
+                if (!email) {
+                    emailError.textContent = 'Email is required';
+                    return false;
+                }
+                if (!emailRegex.test(email)) {
+                    emailError.textContent = 'Please enter a valid email address';
+                    return false;
+                }
+                emailError.textContent = '';
+                return true;
+            }
+
+            function checkPasswordStrength(password) {
+                const strongRegex = new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})');
+                const mediumRegex = new RegExp('^(((?=.*[a-z])(?=.*[A-Z]))|((?=.*[a-z])(?=.*[0-9]))|((?=.*[A-Z])(?=.*[0-9])))(?=.{6,})');
+
+                if (strongRegex.test(password)) {
+                    passwordStrength.textContent = 'Strong Password';
+                    passwordStrength.className = 'password-strength strength-strong';
+                    return 'strong';
+                } else if (mediumRegex.test(password)) {
+                    passwordStrength.textContent = 'Medium Password';
+                    passwordStrength.className = 'password-strength strength-medium';
+                    return 'medium';
+                } else {
+                    passwordStrength.textContent = 'Weak Password';
+                    passwordStrength.className = 'password-strength strength-weak';
+                    return 'weak';
+                }
+            }
+
+            function validatePassword() {
+                const password = passwordInput.value.trim();
+                if (!password) {
+                    passwordError.textContent = 'Password is required';
+                    passwordStrength.textContent = '';
+                    return false;
+                }
+                if (password.length < 8) {
+                    passwordError.textContent = 'Password must be at least 8 characters long';
+                    return false;
+                }
+                checkPasswordStrength(password);
+                passwordError.textContent = '';
+                return true;
+            }
+
+            nameInput.addEventListener('input', validateName);
+            emailInput.addEventListener('input', validateEmail);
+            passwordInput.addEventListener('input', validatePassword);
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                nameError.textContent = '';
+                emailError.textContent = '';
+                passwordError.textContent = '';
+
+                const isNameValid = validateName();
+                const isEmailValid = validateEmail();
+                const isPasswordValid = validatePassword();
+
+                if (!isNameValid || !isEmailValid || !isPasswordValid) {
+                    return;
+                }
+
+                signupButton.disabled = true;
+                loadingIndicator.style.display = 'block';
+
+                try {
+                    const response = await fetch('http://localhost:8081/signup', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            name: nameInput.value.trim(),
+                            email: emailInput.value.trim(),
+                            password: passwordInput.value.trim()
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert('Account created successfully! Please login.');
+                        window.location.href = 'login.html';
+                    } else {
+                        alert(result.message || 'Signup failed. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Signup error:', error);
+                    alert('An error occurred. Please try again later.');
+                } finally {
+                    signupButton.disabled = false;
+                    loadingIndicator.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

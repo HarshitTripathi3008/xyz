@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Train Search</title>
+    <style>
+        /* Basic styles for the page */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        label {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .results {
+            margin-top: 30px;
+        }
+
+        .results ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .results li {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .results button {
+            padding: 8px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .results button:hover {
+            background-color: #218838;
+        }
+
+        .error-message {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Search Trains</h1>
+
+        <!-- Train Search Form -->
+        <form id="search-form">
+            <label for="departure_station">Departure Station: </label>
+            <input type="text" id="departure_station" required placeholder="Enter departure station" />
+            
+            <label for="arrival_station">Arrival Station: </label>
+            <input type="text" id="arrival_station" required placeholder="Enter arrival station" />
+            
+            <button type="submit">Search Trains</button>
+        </form>
+
+        <!-- Display search results -->
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        // Handle form submission
+        document.getElementById('search-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const departureStation = document.getElementById('departure_station').value.trim();
+            const arrivalStation = document.getElementById('arrival_station').value.trim();
+
+            // Validate if the input is empty
+            if (!departureStation || !arrivalStation) {
+                document.getElementById('results').innerHTML = `<p class="error-message">Both departure and arrival stations are required.</p>`;
+                return;
+            }
+
+            try {
+                // Make API call
+                const response = await fetch(`http://localhost:8081/search-trains?departure_station=${encodeURIComponent(departureStation)}&arrival_station=${encodeURIComponent(arrivalStation)}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Display results or error message
+                if (data.success) {
+                    const trains = data.trains;
+                    if (trains.length > 0) {
+                        let resultsHTML = '<ul>';
+                        trains.forEach(train => {
+                            resultsHTML += `
+                                <li>
+                                    <span><strong>Train:</strong> ${train.train_name} <strong>Departure:</strong> ${train.departure_time} <strong>Arrival:</strong> ${train.arrival_time} <strong>Seats Available:</strong> ${train.seats_available}</span>
+                                    <button class="book-ticket-button" onclick="bookTicket('${train.train_id}', '${train.train_name}', '${train.departure_time}', '${train.arrival_time}', '${train.departure_station}', '${train.arrival_station}')">Book Ticket</button>
+                                </li>
+                            `;
+                        });
+                        resultsHTML += '</ul>';
+                        document.getElementById('results').innerHTML = resultsHTML;
+                    } else {
+                        document.getElementById('results').innerHTML = `<p>No trains found.</p>`;
+                    }
+                } else {
+                    document.getElementById('results').innerHTML = `<p class="error-message">${data.message}</p>`;
+                }
+            } catch (error) {
+                console.error("Error searching trains:", error);
+                document.getElementById('results').innerHTML = `<p class="error-message">Error fetching results: ${error.message}</p>`;
+            }
+        });
+
+        // Function to handle the ticket booking (Redirection)
+        function bookTicket(trainId, trainName, departureTime, arrivalTime, departureStation, arrivalStation) {
+            const bookTicketUrl = `book-ticket.html?train_id=${trainId}&train_name=${encodeURIComponent(trainName)}&departure_time=${encodeURIComponent(departureTime)}&arrival_time=${encodeURIComponent(arrivalTime)}&departure_station=${encodeURIComponent(departureStation)}&arrival_station=${encodeURIComponent(arrivalStation)}`;
+            window.location.href = bookTicketUrl;  // Redirect to the correct URL
+        }
+    </script>
+
+</body>
+
+</html>
+
